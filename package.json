@@ -115,6 +115,12 @@
           ],
           "default": null,
           "description": "The path to a PHP 7+ executable."
+        },
+        "php.excludePaths": {
+          "type": ["string","null"],
+          "default": "",
+          "description": "The excluded folder",
+          "pattern": ""
         }
       }
     }

@@ -16,7 +16,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         (process.platform === 'win32' ? 'php.exe' : 'php')
 
     const memoryLimit = conf.get<string>('memoryLimit') || '4095M'
-
+    //with this we can read the excluded paths:   
+     const excludePaths = conf.get<string>('excludePaths') ;
     if (memoryLimit !== '-1' && !/^\d+[KMG]?$/.exec(memoryLimit)) {
         const selected = await vscode.window.showErrorMessage(
             'The memory limit you\'d provided is not numeric, nor "-1" nor valid php shorthand notation!',
@@ -87,6 +88,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     ),
                     '--tcp=127.0.0.1:' + server.address().port,
                     '--memory-limit=' + memoryLimit,
+                    '--exclude-paths=' + excludePaths,
                 ])
                 childProcess.stderr.on('data', (chunk: Buffer) => {
                     const str = chunk.toString()
