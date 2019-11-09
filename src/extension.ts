@@ -7,6 +7,10 @@ import * as url from 'url'
 import * as vscode from 'vscode'
 import { LanguageClient, LanguageClientOptions, StreamInfo } from 'vscode-languageclient'
 const composerJson = require('../composer.json')
+//this interface will allow acces to the object propeties without the error "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'Object'."
+interface IObject{
+    [key: string]: string;
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const conf = vscode.workspace.getConfiguration('php')
@@ -17,7 +21,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const memoryLimit = conf.get<string>('memoryLimit') || '4095M'
     //with this we can read the excluded paths:   
-     const excludePaths = conf.get<string>('excludePaths') ;
+     const excludePaths =conf.has("excludePaths")? conf.get<IObject>('excludePaths'):{} ;
+    // const filesToExclude = conf.get('files.exclude')|| {} ;
+    let excludedPaths:string[]=[];
+    if(excludePaths){
+    
+    console.debug(excludePaths)
+    //let strs=JSON.stringify(excludePaths);
+        for (const key in excludePaths) {
+            if(excludePaths[key]){
+                excludedPaths.push(key)+"/**";
+            }
+        }
+        
+    }
+    const excludePathsParameter=excludedPaths.join(",");
+
     if (memoryLimit !== '-1' && !/^\d+[KMG]?$/.exec(memoryLimit)) {
         const selected = await vscode.window.showErrorMessage(
             'The memory limit you\'d provided is not numeric, nor "-1" nor valid php shorthand notation!',
@@ -88,7 +107,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     ),
                     '--tcp=127.0.0.1:' + server.address().port,
                     '--memory-limit=' + memoryLimit,
-                    '--exclude-paths=' + excludePaths,
+                    '--exclude-paths=' + excludePathsParameter,
                 ])
                 childProcess.stderr.on('data', (chunk: Buffer) => {
                     const str = chunk.toString()
